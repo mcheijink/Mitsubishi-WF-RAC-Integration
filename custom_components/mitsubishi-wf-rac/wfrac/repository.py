@@ -1,6 +1,7 @@
 """Local API for sending and receiving to and from WF-RAC module"""
 
 import time
+from urllib import response
 from requests import post
 
 
@@ -16,6 +17,15 @@ class Repository:
         self._port = port
         self._operator_id = operator_id
         self._device_id = device_id
+
+    def post_104_fix(url,myobj):
+        tries=0
+        web_response = post(url, json=myobj)
+        while web_response.status_code == 104 and tries <=3:
+            web_response = post(url, json=myobj)
+            tries+=1
+        return web_response
+
 
     def get_details(self) -> str:
         """Simple command to get aircon details"""
@@ -75,9 +85,9 @@ class Repository:
         }
 
         if raw is True:
-            return post(url, json=myobj).json()
+            return Repository.post_104_fix(url, json=myobj).json()
 
-        return post(url, json=myobj).json()["contents"]
+        return Repository.post_104_fix(url, json=myobj).json()["contents"]
 
     def send_airco_command(self, airco_id: str, command: str) -> str:
         """send command to the Airco"""
